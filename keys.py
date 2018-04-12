@@ -140,4 +140,5 @@ keys = {
 	'power': pygame.K_POWER,
 	'euro': pygame.K_EURO
 }
+
 key_none = tuple([0] * 323)

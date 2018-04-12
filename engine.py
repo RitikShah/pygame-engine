@@ -1,7 +1,8 @@
+from abc import ABCMeta, abstractmethod
+from keys import keys, key_none
 from color import Color
 from math import *
 import pygame
-from keys import keys, key_none
 
 class Engine:
 	def __init__(self, world, title, fps=60):
@@ -18,13 +19,15 @@ class Engine:
 
 	def start(self):
 		running = True
-		print('Game Boot')
+		if __debug__:
+			print('Game Boot')
 		while running:
 			exit_code = self.gameloop()
 			if exit_code == 'quit':
 				running = False
 
-		print('Game Close')
+		if __debug__:
+			print('Game Close')
 		pygame.quit()
 		quit()
 
@@ -75,6 +78,8 @@ class World:
 			return 1
 		try:
 			output = self._pygame_keys[keys[str(k)]]
+			if __debug__ and not output == 0:
+				print('Key Press Code: ' + str(output))
 		except:
 			assert 0, "Invalid Key - See valid-keys.txt"
 			output = 0
@@ -92,6 +97,8 @@ class World:
 	def add_sprites(self, *sprites):
 		for sprite in sprites:
 			self._all_sprites.add(sprite)
+			if __debug__:
+				print('Sprite added: ' + sprite)
 	
 	def get_sprites(self):
 		return self._all_sprites
@@ -112,8 +119,12 @@ class Screen:
 	def add_text(self, *args, **kwargs):
 		for a in args:
 			self._text_list[args.index(a)] = a
+			if __debug__:
+				print('Text (no ref) added: ' + a.get_text())
 		for k,v in kwargs:
 			self._text_list[k] = v
+			if __debug__:
+				print('Text (ref) added: ' + v.get_text())
 
 	def add_screens(self, **kwargs):
 		for k,v in kwargs:
@@ -156,7 +167,9 @@ class Text:
 	def update_text(self, text):
 		self._text = str(text)
 		self._surf = self._font.render(self._text, True, self._color)
-
+		self._rect = self._surf.get_rect()
+		self._rect.center = (get_world().get_width()/2)*xcenter + xoffset, (get_world().get_height()/2)*ycenter + yoffset
+	
 	def set_screen(self, screen):
 		self._screen = screen
 
@@ -168,7 +181,7 @@ class Text:
 	def get_world(cls):
 		return cls._world
 
-class Entity(pygame.sprite.Sprite):
+class Entity(pygame.sprite.Sprite, metaclass=ABCMeta):
 	def __init__(self, position, size, velocity=(0,0), acceleration=(0,0), color=None):
 		# Superclass constructor call
 		super().__init__()
@@ -218,6 +231,7 @@ class Entity(pygame.sprite.Sprite):
 	def get_y(self):
 		return self._position[1]
 
+	@abstractmethod
 	def update(self):
 		self.rect.x = self.get_x()
 		self.rect.y = self.get_y()
@@ -231,9 +245,15 @@ class Entity(pygame.sprite.Sprite):
 		return cls._world
 
 class Static_Entity(Entity):
-	pass
+	def update(self):
+		super().update()
 
 class Moving_Entity(Entity):
+	def __init__(self, position, size, velocity=(0,0), acceleration=(0,0), color=None, collision=True):
+		assert type(collision) is bool
+		self._collision = collision
+		super().__init__()
+
 	def update(self):
 		self._velocity[0] += self._acceleration[0]
 		self._velocity[1] += self._acceleration[1]
@@ -242,7 +262,7 @@ class Moving_Entity(Entity):
 		self._position[1] += self._velocity[1]
 		super().update()
 
-# Tests
+# Quick Test
 if __name__ == '__main__':
 	class My_World(World):
 		def update(self):
