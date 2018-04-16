@@ -12,7 +12,7 @@ def vector(m=None, r=None, x=None, y=None): # degrees
 
 class _Vector:
 	def __init__(self, magnitude=None, rotation=None, x=None, y=None):
-		self.calc(self, magnitude, rotation, x, y)
+		self.calc(magnitude, rotation, x, y)
 
 	def calc(self, magnitude=None, rotation=None, x=None, y=None):
 		assert (magnitude is None and rotation is None) or (x is None and y is None), \
